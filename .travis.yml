@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t papanazz/react-test -f ./client/Dockerfile.dev ./client/Dockerfile.dev
+
+script:
+  - docker run papanazz/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t papanazz/multi-client ./client
+  - docker build -t papanazz/multi-nginx ./nginx
+  - docker build -t papanazz/multi-server ./server
+  - docker build -t papanazz/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push papanazz/multi-client
+  - docker push papanazz/multi-nginx
+  - docker push papanazz/multi-server
+  - docker push papanazz/multi-worker
